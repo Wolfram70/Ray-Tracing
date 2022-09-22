@@ -59,33 +59,40 @@ void Renderer::onResize(uint32_t width, uint32_t height)
 glm::vec4 Renderer::traceRay(const Ray& ray)
 {
 	//light
-	glm::vec3 lightDirection = glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f));
+	glm::vec3 lightDirection = glm::normalize(glm::vec3(1.0f, -1.0f, -1.0f));
 	
-	//sphere stuff
-	glm::vec3 sphereOrigin = { 0.5f, 0.0f, 0.0f };
-	glm::vec3 sphereToCam = ray.Origin - sphereOrigin;
-	float radius = 0.5f;
-	float A = glm::dot(ray.Direction, ray.Direction);
-	float B = 2 * glm::dot(ray.Direction, sphereToCam);
-	float C = glm::dot(sphereToCam, sphereToCam) - radius * radius;
-
-	//calculation
-	float discriminant = B * B - 4 * A * C;
-
-	if (discriminant >= 0)
+	SColResult ballResult = ball.checkIntersect(ray);
+	if (ballResult.discriminant >= 0)
 	{
-		//float t0 = (-B + glm::sqrt(discriminant)) / (2 * A);
-		float t1 = (-B - glm::sqrt(discriminant)) / (2 * A);
-		
-		glm::vec3 hitPoint = ray.Origin + ray.Direction * t1;
-		glm::vec3 normal = glm::normalize(hitPoint - sphereOrigin);
-		glm::vec3 sphereColor(1, 0, 1);
+		glm::vec3 ballSphereColor(1, 0, 1);
 
-		float d = glm::max(glm::dot(normal, -lightDirection), 0.0f);
+		float d = glm::max(glm::dot(ballResult.normal, -lightDirection), 0.0f);
 
-		sphereColor = sphereColor * d;
+		ballSphereColor = ballSphereColor * d;
 
-		return glm::vec4(sphereColor, 1.0f);
+		return glm::vec4(ballSphereColor, 1.0f);
+	}
+
+	SColResult mirrorResult = mirror.checkIntersect(ray);
+	if (mirrorResult.discriminant >= 0)
+	{
+		glm::vec3 mirrorSphereColor(1, 1, 1);
+
+		float d = glm::max(glm::dot(mirrorResult.normal, -lightDirection), 0.0f);
+
+		mirrorSphereColor = mirrorSphereColor * d;
+
+		ballResult = ball.checkIntersect(mirrorResult.reflected);
+		if (ballResult.discriminant >= 0)
+		{
+			glm::vec3 ballSphereColor(1, 0, 1);
+
+			float d = glm::max(glm::dot(ballResult.normal, -lightDirection), 0.0f);
+
+			mirrorSphereColor += ballSphereColor * d;
+		}
+
+		return glm::vec4(mirrorSphereColor, 1.0f);
 	}
 	
 	return glm::vec4(0, 0, 0, 1);
