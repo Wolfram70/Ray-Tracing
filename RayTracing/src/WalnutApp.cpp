@@ -5,12 +5,20 @@
 #include "Walnut/Timer.h"
 
 #include "Renderer.h"
+#include "Camera.h"
 
 using namespace Walnut;
 
 class ExampleLayer : public Walnut::Layer
 {
 public:
+	ExampleLayer()
+		: m_Camera(45.0f, 0.1f, 100.0f) {}
+
+	virtual void OnUpdate(float ts) override
+	{
+		m_Camera.OnUpdate(ts);
+	}
 	virtual void OnUIRender() override
 	{
 		ImGui::Begin("Settings");
@@ -27,7 +35,7 @@ public:
 		m_ViewportWidth = ImGui::GetContentRegionAvail().x;
 		m_ViewportHeight = ImGui::GetContentRegionAvail().y;
 
-		auto image = renderer.getFinalImage();
+		auto image = m_Renderer.getFinalImage();
 		if (image)
 		{
 			ImGui::Image(image->GetDescriptorSet(), { (float)image->GetWidth(), (float)image->GetHeight() }, ImVec2(0 ,1), ImVec2(1,0));
@@ -35,20 +43,24 @@ public:
 
 		ImGui::End();
 		ImGui::PopStyleVar();
+
+		Render();
 	}
 
 	void Render()
 	{
 		Timer timer;
 
-		renderer.onResize(m_ViewportWidth, m_ViewportHeight);
+		m_Renderer.onResize(m_ViewportWidth, m_ViewportHeight);
+		m_Camera.OnResize(m_ViewportWidth, m_ViewportHeight);
 
-		renderer.render();
+		m_Renderer.render(m_Camera);
 
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
 private:
-	Renderer renderer;
+	Renderer m_Renderer;
+	Camera m_Camera;
 	uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 	float m_LastRenderTime = 0.0f;

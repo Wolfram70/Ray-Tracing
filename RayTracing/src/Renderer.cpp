@@ -17,16 +17,18 @@ namespace Utils
 	}
 }
 
-void Renderer::render()
+void Renderer::render(const Camera& camera)
 {
+	Ray ray;
+	ray.Origin = camera.GetPosition();
+
 	for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
 	{
 		for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++)
 		{
-			glm::vec2 coord = { (float)x / (float)m_FinalImage->GetWidth() , (float)y / (float)m_FinalImage->GetHeight() };
-			coord = coord * 2.0f - 1.0f;
+			ray.Direction = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
 
-			glm::vec4 color = perPixel(coord);
+			glm::vec4 color = traceRay(ray);
 			color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
 			m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::convertToRGBA(color);
 		}
@@ -54,21 +56,17 @@ void Renderer::onResize(uint32_t width, uint32_t height)
 	m_ImageData = new uint32_t[width * height];
 }
 
-glm::vec4 Renderer::perPixel(glm::vec2 coord)
+glm::vec4 Renderer::traceRay(const Ray& ray)
 {
 	//light
 	glm::vec3 lightDirection = glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f));
-
-	//camera
-	glm::vec3 camOrigin = { 0.0f, 0.0f, 3.0f };
-	glm::vec3 rayDirection = { coord, 0.0f }; rayDirection -= camOrigin; //can normalise for unit length
 	
 	//sphere stuff
 	glm::vec3 sphereOrigin = { 0.5f, 0.0f, 0.0f };
-	glm::vec3 sphereToCam = camOrigin - sphereOrigin;
+	glm::vec3 sphereToCam = ray.Origin - sphereOrigin;
 	float radius = 0.5f;
-	float A = glm::dot(rayDirection, rayDirection);
-	float B = 2 * glm::dot(rayDirection, sphereToCam);
+	float A = glm::dot(ray.Direction, ray.Direction);
+	float B = 2 * glm::dot(ray.Direction, sphereToCam);
 	float C = glm::dot(sphereToCam, sphereToCam) - radius * radius;
 
 	//calculation
@@ -79,7 +77,7 @@ glm::vec4 Renderer::perPixel(glm::vec2 coord)
 		//float t0 = (-B + glm::sqrt(discriminant)) / (2 * A);
 		float t1 = (-B - glm::sqrt(discriminant)) / (2 * A);
 		
-		glm::vec3 hitPoint = camOrigin + rayDirection * t1;
+		glm::vec3 hitPoint = ray.Origin + ray.Direction * t1;
 		glm::vec3 normal = glm::normalize(hitPoint - sphereOrigin);
 		glm::vec3 sphereColor(1, 0, 1);
 
