@@ -60,9 +60,10 @@ glm::vec4 Renderer::traceRay(const Ray& ray)
 {
 	//light
 	glm::vec3 lightDirection = glm::normalize(glm::vec3(1.0f, -1.0f, -1.0f));
+	//glm::vec3 lightDirection = ray.Direction;
 	
 	SColResult ballResult = ball.checkIntersect(ray);
-	if (ballResult.discriminant >= 0)
+	if (ballResult.collide)
 	{
 		glm::vec3 ballSphereColor(1, 0, 1);
 
@@ -74,16 +75,16 @@ glm::vec4 Renderer::traceRay(const Ray& ray)
 	}
 
 	SColResult mirrorResult = mirror.checkIntersect(ray);
-	if (mirrorResult.discriminant >= 0)
+	if (mirrorResult.collide)
 	{
-		glm::vec3 mirrorSphereColor(1, 1, 1);
+		glm::vec3 mirrorSphereColor(0, 1, 0);
 
 		float d = glm::max(glm::dot(mirrorResult.normal, -lightDirection), 0.0f);
 
 		mirrorSphereColor = mirrorSphereColor * d;
 
 		ballResult = ball.checkIntersect(mirrorResult.reflected);
-		if (ballResult.discriminant >= 0)
+		if (ballResult.collide)
 		{
 			glm::vec3 ballSphereColor(1, 0, 1);
 

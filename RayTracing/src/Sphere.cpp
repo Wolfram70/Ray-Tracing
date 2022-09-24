@@ -35,6 +35,13 @@ SColResult Sphere::checkIntersect(Ray ray)
 
 	t = (-B - glm::sqrt(result.discriminant)) / (2 * A);
 
+	if (t < 0)
+	{
+		return result;
+	}
+
+	result.collide = true;
+
 	result.hitPoint = ray.Origin + ray.Direction * t;
 	result.normal = glm::normalize(result.hitPoint - Origin);
 

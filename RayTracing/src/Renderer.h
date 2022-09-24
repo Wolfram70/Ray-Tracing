@@ -27,7 +27,7 @@ private:
 	uint32_t* m_ImageData = nullptr;
 
 	//temporary
-	Sphere ball = Sphere(0.5f, { -4.0f, 0.0f, 0.0f });
+	Sphere ball = Sphere(0.5f, { -1.0f, 0.0f, 0.0f });
 	Sphere mirror = Sphere(0.5f, { 1.0f, 0.0f, 0.0f });
 };
 
